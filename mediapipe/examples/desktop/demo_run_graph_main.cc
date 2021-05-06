@@ -39,6 +39,7 @@ DEFINE_string(input_video_path, "",
 DEFINE_string(output_video_path, "",
               "Full path of where to save result (.mp4 only). "
               "If not provided, show result in a window.");
+DEFINE_int32(camera_id, 0, "camera_id");
 
 absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
@@ -61,7 +62,7 @@ absl::Status RunMPPGraph() {
   if (load_video) {
     capture.open(absl::GetFlag(FLAGS_input_video_path));
   } else {
-    capture.open(0);
+    capture.open(absl::GetFlag(FLAGS_camera_id));
   }
   RET_CHECK(capture.isOpened());
 
@@ -120,6 +121,8 @@ absl::Status RunMPPGraph() {
     if (!poller.Next(&packet)) break;
     auto& output_frame = packet.Get<mediapipe::ImageFrame>();
 
+    LOG(INFO) << "[" << packet.Timestamp().Seconds() << "]";
+
     // Convert back to opencv for display or saving.
     cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
@@ -130,9 +133,11 @@ absl::Status RunMPPGraph() {
                     mediapipe::fourcc('a', 'v', 'c', '1'),  // .mp4
                     capture.get(cv::CAP_PROP_FPS), output_frame_mat.size());
         RET_CHECK(writer.isOpened());
+        LOG(INFO) << "OK";
       }
       writer.write(output_frame_mat);
-    } else {
+    } 
+    {
       cv::imshow(kWindowName, output_frame_mat);
       // Press any key to exit.
       const int pressed_key = cv::waitKey(5);
