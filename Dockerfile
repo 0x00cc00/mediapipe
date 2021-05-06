@@ -54,7 +54,8 @@ RUN pip3 install tf_slim
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 # Install bazel
-ARG BAZEL_VERSION=3.4.1
+ARG BAZEL_VERSION=4.0.0
+# ARG BAZEL_VERSION=3.4.1
 RUN mkdir /bazel && \
     wget --no-check-certificate -O /bazel/installer.sh "https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/b\
 azel-${BAZEL_VERSION}-installer-linux-x86_64.sh" && \
@@ -64,6 +65,8 @@ azel-${BAZEL_VERSION}-installer-linux-x86_64.sh" && \
     rm -f /bazel/installer.sh
 
 COPY . /mediapipe/
+WORKDIR /mediapipe/
+RUN bazel build -c opt --define MEDIAPIPE_DISABLE_GPU=1 mediapipe/examples/desktop/hello_world:hello_world
 
 # If we want the docker image to contain the pre-built object_detection_offline_demo binary, do the following
 # RUN bazel build -c opt --define MEDIAPIPE_DISABLE_GPU=1 mediapipe/examples/desktop/demo:object_detection_tensorflow_demo
